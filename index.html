@@ -291,8 +291,8 @@ function App() {
         <div style={{fontSize:20,fontWeight:600,marginBottom:4}}>Hola! 🇪🇸 Barcelona-Spanisch</div>
         <div style={{fontSize:12,color:"#888",marginBottom:8}}>Vokabeln: {vocab.length} · Gelernt: {known.length}</div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          <input type="password" placeholder="ElevenLabs API Key (für beste Sprachqualität)" value={elevenKey} onChange={e=>setElevenKey(e.target.value)} style={{padding:"7px 10px",borderRadius:8,border:"1px solid #ddd",fontSize:12,width:"100%"}} />
-          <input type="password" placeholder="Claude API Key (für KI-Funktionen)" value={claudeKey} onChange={e=>setClaudeKey(e.target.value)} style={{padding:"7px 10px",borderRadius:8,border:"1px solid #ddd",fontSize:12,width:"100%"}} />
+          <input type="password" placeholder="ElevenLabs API Key (einmalig eingeben)" value={elevenKey} onChange={e=>{setElevenKey(e.target.value);localStorage.setItem("elevenKey",e.target.value);}} style={{padding:"7px 10px",borderRadius:8,border:"1px solid #ddd",fontSize:12,width:"100%"}} />
+          <input type="password" placeholder="Claude API Key (einmalig eingeben)" value={claudeKey} onChange={e=>{setClaudeKey(e.target.value);localStorage.setItem("claudeKey",e.target.value);}} style={{padding:"7px 10px",borderRadius:8,border:"1px solid #ddd",fontSize:12,width:"100%"}} />
         </div>
       </div>
 
