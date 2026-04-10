@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanisch Lern-App – Barcelona</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; color: #1a1a1a; }
+  input, button, select { font-family: inherit; }
+  button { transition: opacity 0.15s; }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const BASE_VOCAB = [
+  {de:"Hallo",es:"Hola",cat:"Begrüßung"},{de:"Guten Morgen",es:"Buenos días",cat:"Begrüßung"},{de:"Guten Abend",es:"Buenas noches",cat:"Begrüßung"},{de:"Auf Wiedersehen",es:"Adiós",cat:"Begrüßung"},{de:"Bitte",es:"Por favor",cat:"Begrüßung"},{de:"Danke",es:"Gracias",cat:"Begrüßung"},{de:"Entschuldigung",es:"Perdón",cat:"Begrüßung"},{de:"Wie geht es Ihnen?",es:"¿Cómo está usted?",cat:"Begrüßung"},{de:"Sehr gut",es:"Muy bien",cat:"Begrüßung"},{de:"Bis bald",es:"Hasta luego",cat:"Begrüßung"},
+  {de:"Wasser",es:"Agua",cat:"Restaurant"},{de:"Rechnung",es:"La cuenta",cat:"Restaurant"},{de:"Tisch für zwei",es:"Una mesa para dos",cat:"Restaurant"},{de:"Ohne Fleisch",es:"Sin carne",cat:"Restaurant"},{de:"Sehr lecker",es:"Muy rico",cat:"Restaurant"},{de:"Speisekarte",es:"La carta",cat:"Restaurant"},{de:"Frühstück",es:"El desayuno",cat:"Restaurant"},{de:"Mittagessen",es:"El almuerzo",cat:"Restaurant"},{de:"Abendessen",es:"La cena",cat:"Restaurant"},{de:"Wein",es:"El vino",cat:"Restaurant"},{de:"Bier",es:"La cerveza",cat:"Restaurant"},{de:"Kaffee",es:"El café",cat:"Restaurant"},{de:"Brot",es:"El pan",cat:"Restaurant"},{de:"Fisch",es:"El pescado",cat:"Restaurant"},{de:"Fleisch",es:"La carne",cat:"Restaurant"},
+  {de:"Wohnung",es:"El apartamento",cat:"Wohnung"},{de:"Schlüssel",es:"La llave",cat:"Wohnung"},{de:"Nachbar",es:"El vecino",cat:"Wohnung"},{de:"Aufzug",es:"El ascensor",cat:"Wohnung"},{de:"Miete",es:"El alquiler",cat:"Wohnung"},{de:"Heizung",es:"La calefacción",cat:"Wohnung"},{de:"Fenster",es:"La ventana",cat:"Wohnung"},{de:"Tür",es:"La puerta",cat:"Wohnung"},{de:"Küche",es:"La cocina",cat:"Wohnung"},{de:"Badezimmer",es:"El baño",cat:"Wohnung"},{de:"Balkon",es:"El balcón",cat:"Wohnung"},{de:"Gemeinschaft",es:"La comunidad",cat:"Wohnung"},
+  {de:"Supermarkt",es:"El supermercado",cat:"Einkaufen"},{de:"Wie viel kostet das?",es:"¿Cuánto cuesta?",cat:"Einkaufen"},{de:"Zu teuer",es:"Demasiado caro",cat:"Einkaufen"},{de:"Bäckerei",es:"La panadería",cat:"Einkaufen"},{de:"Apotheke",es:"La farmacia",cat:"Einkaufen"},{de:"Markt",es:"El mercado",cat:"Einkaufen"},{de:"Kasse",es:"La caja",cat:"Einkaufen"},{de:"Tüte",es:"La bolsa",cat:"Einkaufen"},{de:"Preis",es:"El precio",cat:"Einkaufen"},{de:"Rabatt",es:"El descuento",cat:"Einkaufen"},
+  {de:"Vertrag",es:"El contrato",cat:"Behörden"},{de:"Unterschrift",es:"La firma",cat:"Behörden"},{de:"Ausweis",es:"El carnet de identidad",cat:"Behörden"},{de:"Ich verstehe nicht",es:"No entiendo",cat:"Behörden"},{de:"Sprechen Sie Englisch?",es:"¿Habla inglés?",cat:"Behörden"},{de:"Formular",es:"El formulario",cat:"Behörden"},{de:"Termin",es:"La cita",cat:"Behörden"},{de:"Rathaus",es:"El ayuntamiento",cat:"Behörden"},
+  {de:"Strand",es:"La playa",cat:"Barcelona"},{de:"U-Bahn",es:"El metro",cat:"Barcelona"},{de:"Bahnhof",es:"La estación",cat:"Barcelona"},{de:"Links",es:"A la izquierda",cat:"Barcelona"},{de:"Rechts",es:"A la derecha",cat:"Barcelona"},{de:"Geradeaus",es:"Todo recto",cat:"Barcelona"},{de:"Kathedrale",es:"La catedral",cat:"Barcelona"},{de:"Altstadt",es:"El barrio gótico",cat:"Barcelona"},{de:"Hafen",es:"El puerto",cat:"Barcelona"},{de:"Park",es:"El parque",cat:"Barcelona"},
+  {de:"eins",es:"uno",cat:"Zahlen"},{de:"zwei",es:"dos",cat:"Zahlen"},{de:"drei",es:"tres",cat:"Zahlen"},{de:"vier",es:"cuatro",cat:"Zahlen"},{de:"fünf",es:"cinco",cat:"Zahlen"},{de:"sechs",es:"seis",cat:"Zahlen"},{de:"sieben",es:"siete",cat:"Zahlen"},{de:"acht",es:"ocho",cat:"Zahlen"},{de:"neun",es:"nueve",cat:"Zahlen"},{de:"zehn",es:"diez",cat:"Zahlen"},{de:"zwanzig",es:"veinte",cat:"Zahlen"},{de:"hundert",es:"cien",cat:"Zahlen"},
+  {de:"Montag",es:"lunes",cat:"Zeit"},{de:"Dienstag",es:"martes",cat:"Zeit"},{de:"Mittwoch",es:"miércoles",cat:"Zeit"},{de:"Donnerstag",es:"jueves",cat:"Zeit"},{de:"Freitag",es:"viernes",cat:"Zeit"},{de:"Samstag",es:"sábado",cat:"Zeit"},{de:"Sonntag",es:"domingo",cat:"Zeit"},{de:"heute",es:"hoy",cat:"Zeit"},{de:"morgen",es:"mañana",cat:"Zeit"},{de:"gestern",es:"ayer",cat:"Zeit"},
+  {de:"groß",es:"grande",cat:"Adjektive"},{de:"klein",es:"pequeño",cat:"Adjektive"},{de:"gut",es:"bueno",cat:"Adjektive"},{de:"schlecht",es:"malo",cat:"Adjektive"},{de:"schön",es:"bonito",cat:"Adjektive"},{de:"alt",es:"viejo",cat:"Adjektive"},{de:"neu",es:"nuevo",cat:"Adjektive"},{de:"heiß",es:"caliente",cat:"Adjektive"},{de:"kalt",es:"frío",cat:"Adjektive"},{de:"viel",es:"mucho",cat:"Adjektive"},
+];
+
+const GRAMMAR = [
+  {id:"g1",title:"ser vs. estar",hint:"'ser' für dauerhaft, 'estar' für vorübergehend",exercises:[
+    {q:"Ich bin Anwalt. (dauerhaft)",blank:"Yo ___ abogado.",answer:"soy",opts:["soy","estoy","es","está"]},
+    {q:"Ich bin müde. (vorübergehend)",blank:"Yo ___ cansado.",answer:"estoy",opts:["soy","estoy","es","está"]},
+    {q:"Barcelona ist schön. (Eigenschaft)",blank:"Barcelona ___ bonita.",answer:"es",opts:["es","está","soy","estoy"]},
+    {q:"Die Wohnung ist bereit. (Zustand)",blank:"El apartamento ___ listo.",answer:"está",opts:["es","está","son","están"]},
+  ]},
+  {id:"g2",title:"Artikel: el/la/los/las",hint:"Spanisch hat männliche (el) und weibliche (la) Artikel",exercises:[
+    {q:"das Wasser (m.)",blank:"___ agua",answer:"el",opts:["el","la","los","las"]},
+    {q:"die Tür (f.)",blank:"___ puerta",answer:"la",opts:["el","la","los","las"]},
+    {q:"die Schlüssel (Pl.)",blank:"___ llaves",answer:"las",opts:["el","la","los","las"]},
+    {q:"die Verträge (Pl. m.)",blank:"___ contratos",answer:"los",opts:["el","la","los","las"]},
+  ]},
+  {id:"g3",title:"tener (haben)",hint:"tener = haben – für Besitz und Alter",exercises:[
+    {q:"Ich habe drei Kinder.",blank:"Yo ___ tres hijos.",answer:"tengo",opts:["tengo","tienes","tiene","tenemos"]},
+    {q:"Wir haben eine Wohnung.",blank:"Nosotros ___ un apartamento.",answer:"tenemos",opts:["tengo","tienes","tiene","tenemos"]},
+    {q:"Er hat den Schlüssel.",blank:"Él ___ la llave.",answer:"tiene",opts:["tengo","tienes","tiene","tenemos"]},
+    {q:"Du hast Recht.",blank:"Tú ___ razón.",answer:"tienes",opts:["tengo","tienes","tiene","tenemos"]},
+  ]},
+  {id:"g4",title:"Fragen stellen",hint:"Im Spanischen ¿ am Anfang und ? am Ende",exercises:[
+    {q:"Wo ist ...?",blank:"¿___ está el metro?",answer:"Dónde",opts:["Dónde","Qué","Cómo","Cuánto"]},
+    {q:"Was kostet ...?",blank:"¿___ cuesta?",answer:"Cuánto",opts:["Dónde","Qué","Cómo","Cuánto"]},
+    {q:"Wie heißen Sie?",blank:"¿___ se llama?",answer:"Cómo",opts:["Dónde","Qué","Cómo","Cuánto"]},
+    {q:"Was ist das?",blank:"¿___ es esto?",answer:"Qué",opts:["Dónde","Qué","Cómo","Cuánto"]},
+  ]},
+];
+
+const DIALOGUES = [
+  {id:"d1",title:"Im Restaurant",scene:"Ein Deutscher betritt ein Restaurant im Barceloneta-Viertel.",lines:[
+    {speaker:"Kellner",text:"¡Buenas tardes! ¿Tiene reserva?"},
+    {speaker:"Gast",text:"No, no tengo reserva. ¿Hay una mesa libre?"},
+    {speaker:"Kellner",text:"Sí, claro. ¿Para cuántas personas?"},
+    {speaker:"Gast",text:"Para dos personas, por favor."},
+    {speaker:"Kellner",text:"Muy bien. Por aquí, por favor. ¿Quieren ver la carta?"},
+    {speaker:"Gast",text:"Sí, y también agua, por favor."},
+  ],questions:[
+    {q:"Hat der Gast eine Reservierung?",opts:["Ja","Nein","Unbekannt"],answer:"Nein"},
+    {q:"Für wie viele Personen?",opts:["Eine","Zwei","Drei"],answer:"Zwei"},
+    {q:"Was bestellt der Gast sofort?",opts:["Wein","Wasser","Kaffee"],answer:"Wasser"},
+  ]},
+  {id:"d2",title:"Beim Nachbarn",scene:"Du triffst deinen Nachbarn im Aufzug.",lines:[
+    {speaker:"Nachbar",text:"¡Hola, buenos días! ¿Es usted el nuevo vecino del quinto?"},
+    {speaker:"Du",text:"Sí, soy yo. Me llamo Klaus. Encantado."},
+    {speaker:"Nachbar",text:"Mucho gusto. Yo soy Miguel. ¿Le gusta el apartamento?"},
+    {speaker:"Du",text:"Sí, mucho. La vista al mar es preciosa."},
+    {speaker:"Nachbar",text:"Sí, es verdad. Bienvenido al edificio."},
+  ],questions:[
+    {q:"In welchem Stock wohnt der Gast?",opts:["Im dritten","Im fünften","Im ersten"],answer:"Im fünften"},
+    {q:"Was gefällt dem Gast besonders?",opts:["Der Aufzug","Die Meeressicht","Der Nachbar"],answer:"Die Meeressicht"},
+    {q:"Wie heißt der Nachbar?",opts:["Klaus","Miguel","Carlos"],answer:"Miguel"},
+  ]},
+  {id:"d3",title:"Auf dem Markt",scene:"Du kaufst frisches Obst auf der Boqueria.",lines:[
+    {speaker:"Verkäufer",text:"¡Buenos días! ¿Qué desea?"},
+    {speaker:"Käufer",text:"Buenos días. Quiero un kilo de naranjas, por favor."},
+    {speaker:"Verkäufer",text:"Claro. Las naranjas son muy dulces hoy. ¿Algo más?"},
+    {speaker:"Käufer",text:"¿Cuánto cuesta el melón?"},
+    {speaker:"Verkäufer",text:"El melón cuesta tres euros."},
+    {speaker:"Käufer",text:"Bien, me lo llevo. Gracias."},
+  ],questions:[
+    {q:"Was kauft der Kunde zuerst?",opts:["Melonen","Orangen","Äpfel"],answer:"Orangen"},
+    {q:"Wie viel kostet der Melón?",opts:["Zwei Euro","Drei Euro","Fünf Euro"],answer:"Drei Euro"},
+    {q:"Wie beschreibt der Verkäufer die Orangen?",opts:["Günstig","Sehr süß","Sehr groß"],answer:"Sehr süß"},
+  ]},
+];
+
+const CATS = ["Alle","Begrüßung","Restaurant","Wohnung","Einkaufen","Behörden","Barcelona","Zahlen","Zeit","Adjektive"];
+const shuffle = arr => [...arr].sort(() => Math.random()-0.5);
+
+const callClaude = async (prompt, apiKey) => {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key": apiKey, "anthropic-version":"2023-06-01"},
+    body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+  });
+  const d = await res.json();
+  return d.content?.[0]?.text || "";
+};
+
+function App() {
+  const [tab, setTab] = useState("karten");
+  const [elevenKey, setElevenKey] = useState("");
+  const [cat, setCat] = useState("Alle");
+  const [vocab, setVocab] = useState(BASE_VOCAB);
+  const [cardIdx, setCardIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [known, setKnown] = useState([]);
+  const [quizQ, setQuizQ] = useState(null);
+  const [quizScore, setQuizScore] = useState({correct:0,total:0});
+  const [quizFeedback, setQuizFeedback] = useState(null);
+  const [gramIdx, setGramIdx] = useState(0);
+  const [exIdx, setExIdx] = useState(0);
+  const [gramAnswer, setGramAnswer] = useState(null);
+  const [dialIdx, setDialIdx] = useState(0);
+  const [dialPhase, setDialPhase] = useState("read");
+  const [dialQIdx, setDialQIdx] = useState(0);
+  const [dialFeedback, setDialFeedback] = useState(null);
+  const [dialScore, setDialScore] = useState({correct:0,total:0});
+  const [voiceState, setVoiceState] = useState("idle");
+  const [voiceWord, setVoiceWord] = useState(null);
+  const [voiceResult, setVoiceResult] = useState(null);
+  const [voiceFeedback, setVoiceFeedback] = useState(null);
+  const [aiFeedback, setAiFeedback] = useState("");
+  const [aiFeedbackLoading, setAiFeedbackLoading] = useState(false);
+  const [aiVocabCat, setAiVocabCat] = useState("Restaurant");
+  const [aiVocabLoading, setAiVocabLoading] = useState(false);
+  const [aiVocabMsg, setAiVocabMsg] = useState("");
+  const [claudeKey, setClaudeKey] = useState("");
+
+  const filtered = cat === "Alle" ? vocab : vocab.filter(v => v.cat === cat);
+  const cur = filtered[cardIdx % Math.max(filtered.length,1)];
+
+  useEffect(() => { setCardIdx(0); setFlipped(false); }, [cat]);
+
+  const speak = async (text) => {
+    if (elevenKey) {
+      try {
+        const res = await fetch("https://api.elevenlabs.io/v1/text-to-speech/pNInz6obpgDQGcFmaJgB", {
+          method:"POST",
+          headers:{"xi-api-key": elevenKey, "Content-Type":"application/json"},
+          body: JSON.stringify({text, model_id:"eleven_multilingual_v2", voice_settings:{stability:0.5,similarity_boost:0.75}})
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          new Audio(URL.createObjectURL(blob)).play();
+          return;
+        }
+      } catch(e) {}
+    }
+    // Fallback Web Speech
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "es-ES"; u.rate = 0.85;
+    const voices = synth.getVoices();
+    const esVoice = voices.find(v => v.lang.startsWith("es"));
+    if (esVoice) u.voice = esVoice;
+    synth.speak(u);
+  };
+
+  const nextCard = (wasKnown) => {
+    if (wasKnown) setKnown(k=>[...k, cur.es]);
+    setFlipped(false);
+    setTimeout(() => setCardIdx(i=>(i+1) % filtered.length), 150);
+  };
+
+  const genQuiz = useCallback(() => {
+    const pool = vocab.length >= 4 ? vocab : BASE_VOCAB;
+    const item = pool[Math.floor(Math.random()*pool.length)];
+    const wrongs = shuffle(pool.filter(v=>v.es!==item.es)).slice(0,3).map(v=>v.es);
+    setQuizQ({item, opts: shuffle([item.es,...wrongs])});
+    setQuizFeedback(null);
+  }, [vocab]);
+
+  useEffect(() => { if (tab==="quiz") genQuiz(); }, [tab]);
+
+  const answerQuiz = (opt) => {
+    if (quizFeedback) return;
+    const ok = opt === quizQ.item.es;
+    setQuizFeedback({correct:ok, chosen:opt});
+    setQuizScore(s=>({correct:s.correct+(ok?1:0), total:s.total+1}));
+    setTimeout(()=>genQuiz(), 1500);
+  };
+
+  const gram = GRAMMAR[gramIdx];
+  const ex = gram.exercises[exIdx];
+
+  const nextGramEx = () => {
+    setGramAnswer(null);
+    if (exIdx < gram.exercises.length-1) setExIdx(i=>i+1);
+    else { setExIdx(0); setGramIdx(i=>(i+1)%GRAMMAR.length); }
+  };
+
+  const dial = DIALOGUES[dialIdx];
+  const answerDial = (opt) => {
+    if (dialFeedback) return;
+    const ok = opt === dial.questions[dialQIdx].answer;
+    setDialFeedback({correct:ok, chosen:opt});
+    setDialScore(s=>({correct:s.correct+(ok?1:0), total:s.total+1}));
+    setTimeout(()=>{
+      setDialFeedback(null);
+      if (dialQIdx < dial.questions.length-1) setDialQIdx(i=>i+1);
+      else setDialPhase("done");
+    }, 1200);
+  };
+
+  const nextDial = () => {
+    setDialIdx(i=>(i+1)%DIALOGUES.length);
+    setDialPhase("read"); setDialQIdx(0); setDialFeedback(null);
+  };
+
+  const startVoice = () => {
+    const word = filtered[Math.floor(Math.random()*filtered.length)];
+    setVoiceWord(word); setVoiceResult(null); setVoiceFeedback(null); setAiFeedback("");
+    setVoiceState("listening-prompt");
+    speak(word.es);
+    setTimeout(() => { setVoiceState("recording"); startRec(word); }, 2500);
+  };
+
+  const startRec = (word) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setVoiceState("unsupported"); return; }
+    const r = new SR(); r.lang="es-ES"; r.interimResults=false;
+    r.onresult = async (e) => {
+      const t = e.results[0][0].transcript.trim().toLowerCase();
+      setVoiceResult(t);
+      setVoiceState("analyzing");
+      const target = word.es.toLowerCase().replace(/[^a-záéíóúüñ ]/gi,"");
+      const got = t.replace(/[^a-záéíóúüñ ]/gi,"");
+      const match = got===target || got.includes(target) || target.includes(got);
+      setVoiceFeedback(match?"correct":"wrong");
+      if (!match && claudeKey) {
+        setAiFeedbackLoading(true);
+        try {
+          const tip = await callClaude(`Du bist ein freundlicher Spanisch-Lehrer für einen 57-jährigen deutschen Anfänger. Er sollte "${word.es}" (Deutsch: "${word.de}") aussprechen, aber das Mikrofon erkannte "${t}". Gib auf Deutsch in 2-3 Sätzen einen freundlichen, konkreten Aussprache-Tipp.`, claudeKey);
+          setAiFeedback(tip);
+        } catch { setAiFeedback("Tipp: Sprich die Vokale klar und deutlich aus."); }
+        setAiFeedbackLoading(false);
+      }
+      setVoiceState("done");
+    };
+    r.onerror = () => setVoiceState("error");
+    r.start();
+  };
+
+  const loadMoreVocab = async () => {
+    if (!claudeKey) { setAiVocabMsg("Bitte Claude API Key eingeben!"); return; }
+    setAiVocabLoading(true); setAiVocabMsg("");
+    try {
+      const existing = vocab.filter(v=>v.cat===aiVocabCat).map(v=>v.es).join(", ");
+      const text = await callClaude(`Generiere 20 neue spanische Vokabeln für einen deutschen Anfänger zum Thema "${aiVocabCat}" für den Alltag in Barcelona. Bereits vorhanden: ${existing}. Antworte NUR mit einem JSON-Array ohne Markdown: [{"de":"...","es":"...","cat":"${aiVocabCat}"}]`, claudeKey);
+      const clean = text.replace(/\`\`\`json|\`\`\`/g,"").trim();
+      const newWords = JSON.parse(clean);
+      setVocab(v=>[...v, ...newWords.filter(w=>!v.some(x=>x.es===w.es))]);
+      setAiVocabMsg(`${newWords.length} neue Wörter hinzugefügt!`);
+    } catch { setAiVocabMsg("Fehler. Bitte Claude API Key prüfen."); }
+    setAiVocabLoading(false);
+  };
+
+  const TABS = [{id:"karten",label:"Karten"},{id:"quiz",label:"Quiz"},{id:"grammatik",label:"Grammatik"},{id:"dialog",label:"Dialog"},{id:"sprechen",label:"Sprechen"},{id:"vokabeln",label:"+Vokabeln"}];
+
+  const s = {
+    card: {background:"#fff",border:"1px solid #e5e5e5",borderRadius:12,padding:"1.5rem"},
+    btn: (active) => ({padding:"8px 14px",border:"1px solid #ddd",borderRadius:8,background:active?"#e8f0fe":"#fff",color:active?"#1a56db":"#555",cursor:"pointer",fontSize:13,fontWeight:active?500:400}),
+    optBtn: (state) => {
+      if (state==="correct") return {background:"#f0fdf4",border:"1px solid #86efac",color:"#166534"};
+      if (state==="wrong") return {background:"#fef2f2",border:"1px solid #fca5a5",color:"#991b1b"};
+      return {background:"#fff",border:"1px solid #e5e5e5",color:"#1a1a1a"};
+    },
+    pill: (active) => ({padding:"3px 10px",borderRadius:20,border:"1px solid #e5e5e5",background:active?"#e8f0fe":"#fff",color:active?"#1a56db":"#666",fontSize:12,cursor:"pointer"}),
+  };
+
+  return (
+    <div style={{maxWidth:580,margin:"0 auto",padding:"1rem 1rem 4rem",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
+      <div style={{marginBottom:"1rem"}}>
+        <div style={{fontSize:20,fontWeight:600,marginBottom:4}}>Hola! 🇪🇸 Barcelona-Spanisch</div>
+        <div style={{fontSize:12,color:"#888",marginBottom:8}}>Vokabeln: {vocab.length} · Gelernt: {known.length}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          <input type="password" placeholder="ElevenLabs API Key (für beste Sprachqualität)" value={elevenKey} onChange={e=>setElevenKey(e.target.value)} style={{padding:"7px 10px",borderRadius:8,border:"1px solid #ddd",fontSize:12,width:"100%"}} />
+          <input type="password" placeholder="Claude API Key (für KI-Funktionen)" value={claudeKey} onChange={e=>setClaudeKey(e.target.value)} style={{padding:"7px 10px",borderRadius:8,border:"1px solid #ddd",fontSize:12,width:"100%"}} />
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:"1.25rem"}}>
+        {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{...s.btn(tab===t.id)}}>{t.label}</button>)}
+      </div>
+
+      {tab==="karten" && <div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:"1rem"}}>
+          {CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={s.pill(cat===c)}>{c}</button>)}
+        </div>
+        <div onClick={()=>setFlipped(f=>!f)} style={{...s.card,textAlign:"center",minHeight:150,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",marginBottom:"1rem",userSelect:"none"}}>
+          <div style={{fontSize:11,color:"#aaa",marginBottom:8,letterSpacing:1}}>{flipped?"SPANISCH":"DEUTSCH"}</div>
+          <div style={{fontSize:26,fontWeight:500,marginBottom:12}}>{flipped?cur.es:cur.de}</div>
+          {flipped && <button onClick={e=>{e.stopPropagation();speak(cur.es);}} style={{padding:"5px 14px",borderRadius:20,border:"1px solid #ddd",background:"#f5f5f5",fontSize:12,cursor:"pointer"}}>🔊 Anhören</button>}
+          {!flipped && <div style={{fontSize:12,color:"#bbb"}}>Tippen zum Umdrehen</div>}
+        </div>
+        <div style={{fontSize:12,color:"#aaa",textAlign:"center",marginBottom:"1rem"}}>{(cardIdx%filtered.length)+1} / {filtered.length} · {cur?.cat}</div>
+        {flipped && <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>nextCard(false)} style={{flex:1,padding:"12px",...s.optBtn("wrong"),borderRadius:8,cursor:"pointer",fontWeight:500}}>Noch üben</button>
+          <button onClick={()=>nextCard(true)} style={{flex:1,padding:"12px",...s.optBtn("correct"),borderRadius:8,cursor:"pointer",fontWeight:500}}>Gewusst!</button>
+        </div>}
+      </div>}
+
+      {tab==="quiz" && <div>
+        <div style={{display:"flex",gap:8,marginBottom:"1.25rem"}}>
+          {[{label:"Richtig",val:quizScore.correct},{label:"Gesamt",val:quizScore.total},{label:"Quote",val:(quizScore.total>0?Math.round(quizScore.correct/quizScore.total*100):0)+"%"}].map(m=>(
+            <div key={m.label} style={{flex:1,background:"#f9f9f9",borderRadius:8,padding:"0.75rem",textAlign:"center"}}>
+              <div style={{fontSize:11,color:"#888"}}>{m.label}</div>
+              <div style={{fontSize:22,fontWeight:500}}>{m.val}</div>
+            </div>
+          ))}
+        </div>
+        {quizQ && <>
+          <div style={{...s.card,textAlign:"center",marginBottom:"1rem"}}>
+            <div style={{fontSize:11,color:"#aaa",marginBottom:8}}>Wie heißt auf Spanisch:</div>
+            <div style={{fontSize:24,fontWeight:500}}>{quizQ.item.de}</div>
+            <div style={{fontSize:12,color:"#bbb",marginTop:4}}>{quizQ.item.cat}</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {quizQ.opts.map(opt=>{
+              let state = "";
+              if (quizFeedback) { if (opt===quizQ.item.es) state="correct"; else if (opt===quizFeedback.chosen) state="wrong"; }
+              return <button key={opt} onClick={()=>answerQuiz(opt)} style={{padding:"13px 16px",...s.optBtn(state),borderRadius:8,cursor:"pointer",textAlign:"left",fontSize:15}}>{opt}</button>;
+            })}
+          </div>
+        </>}
+      </div>}
+
+      {tab==="grammatik" && <div>
+        <div style={{display:"flex",gap:6,marginBottom:"1rem",flexWrap:"wrap"}}>
+          {GRAMMAR.map((g,i)=><button key={g.id} onClick={()=>{setGramIdx(i);setExIdx(0);setGramAnswer(null);}} style={s.pill(gramIdx===i)}>{g.title}</button>)}
+        </div>
+        <div style={{background:"#f0f4ff",borderRadius:8,padding:"0.75rem 1rem",marginBottom:"1rem",fontSize:13,color:"#555"}}>Tipp: {gram.hint}</div>
+        <div style={{...s.card,marginBottom:"1rem"}}>
+          <div style={{fontSize:13,color:"#888",marginBottom:8}}>{ex.q}</div>
+          <div style={{fontSize:20,fontWeight:500,marginBottom:"1.25rem"}}>{ex.blank}</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {ex.opts.map(opt=>{
+              let state="";
+              if (gramAnswer){if(opt===ex.answer)state="correct";else if(opt===gramAnswer)state="wrong";}
+              return <button key={opt} onClick={()=>!gramAnswer&&setGramAnswer(opt)} style={{padding:"10px 18px",...s.optBtn(state),borderRadius:8,cursor:"pointer",fontSize:16,fontWeight:500}}>{opt}</button>;
+            })}
+          </div>
+          {gramAnswer && <div style={{marginTop:"1rem",fontSize:13,color:gramAnswer===ex.answer?"#166534":"#991b1b"}}>
+            {gramAnswer===ex.answer?"✓ Richtig!":` ✗ Falsch. Richtig: „${ex.answer}"`}
+          </div>}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:12,color:"#aaa"}}>Übung {exIdx+1} / {gram.exercises.length}</div>
+          {gramAnswer && <button onClick={nextGramEx} style={{...s.btn(true),padding:"8px 16px"}}>Weiter →</button>}
+        </div>
+      </div>}
+
+      {tab==="dialog" && <div>
+        <div style={{display:"flex",gap:6,marginBottom:"1rem",flexWrap:"wrap"}}>
+          {DIALOGUES.map((d,i)=><button key={d.id} onClick={()=>{setDialIdx(i);setDialPhase("read");setDialQIdx(0);setDialFeedback(null);}} style={s.pill(dialIdx===i)}>{d.title}</button>)}
+        </div>
+        <div style={{fontSize:12,color:"#888",marginBottom:"0.75rem",fontStyle:"italic"}}>{dial.scene}</div>
+        <div style={{...s.card,marginBottom:"1rem"}}>
+          {dial.lines.map((l,i)=>(
+            <div key={i} style={{marginBottom:"0.75rem",display:"flex",gap:10}}>
+              <div style={{minWidth:70,fontSize:12,fontWeight:500,color:"#888",paddingTop:2}}>{l.speaker}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:15,marginBottom:2}}>{l.text}</div>
+                <button onClick={()=>speak(l.text)} style={{fontSize:11,color:"#aaa",background:"none",border:"none",cursor:"pointer",padding:0}}>🔊 Anhören</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {dialPhase==="read" && <button onClick={()=>setDialPhase("quiz")} style={{...s.btn(true),width:"100%",padding:"12px",fontSize:14}}>Verständnisfragen →</button>}
+        {dialPhase==="quiz" && dialQIdx < dial.questions.length && <div>
+          <div style={{fontSize:13,color:"#888",marginBottom:6}}>Frage {dialQIdx+1} / {dial.questions.length}</div>
+          <div style={{fontSize:17,fontWeight:500,marginBottom:"1rem"}}>{dial.questions[dialQIdx].q}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {dial.questions[dialQIdx].opts.map(opt=>{
+              let state="";
+              if(dialFeedback){if(opt===dial.questions[dialQIdx].answer)state="correct";else if(opt===dialFeedback.chosen)state="wrong";}
+              return <button key={opt} onClick={()=>answerDial(opt)} style={{padding:"12px 16px",...s.optBtn(state),borderRadius:8,cursor:"pointer",textAlign:"left",fontSize:15}}>{opt}</button>;
+            })}
+          </div>
+        </div>}
+        {dialPhase==="done" && <div style={{...s.optBtn("correct"),borderRadius:12,padding:"1.25rem",textAlign:"center"}}>
+          <div style={{fontWeight:500,marginBottom:4}}>Dialog abgeschlossen!</div>
+          <div style={{fontSize:13,marginBottom:"1rem"}}>{dialScore.correct} / {dial.questions.length} richtig</div>
+          <button onClick={nextDial} style={{...s.btn(true),padding:"8px 16px"}}>Nächster Dialog →</button>
+        </div>}
+      </div>}
+
+      {tab==="sprechen" && <div>
+        <div style={{background:"#f0f4ff",borderRadius:8,padding:"0.75rem 1rem",marginBottom:"1.25rem",fontSize:13,color:"#555"}}>
+          App spricht vor → du sprichst nach → Aussprache wird bewertet. Mikrofon-Erlaubnis erforderlich.
+        </div>
+        {voiceWord && <div style={{...s.card,textAlign:"center",marginBottom:"1rem"}}>
+          <div style={{fontSize:11,color:"#aaa",marginBottom:6}}>Sprich nach:</div>
+          <div style={{fontSize:28,fontWeight:500,marginBottom:4}}>{voiceWord.es}</div>
+          <div style={{fontSize:14,color:"#888"}}>{voiceWord.de}</div>
+        </div>}
+        {voiceState==="listening-prompt" && <div style={{textAlign:"center",padding:"1rem",color:"#888"}}>Höre zu...</div>}
+        {voiceState==="recording" && <div style={{textAlign:"center",padding:"1rem"}}>
+          <div style={{width:44,height:44,borderRadius:"50%",background:"#fee2e2",margin:"0 auto 8px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div style={{width:14,height:14,borderRadius:"50%",background:"#dc2626"}}/>
+          </div>
+          <div style={{fontSize:13,color:"#888"}}>Aufnahme läuft...</div>
+        </div>}
+        {voiceState==="analyzing" && <div style={{textAlign:"center",padding:"1rem",color:"#888"}}>Analysiere...</div>}
+        {voiceState==="done" && voiceResult && <div style={{marginBottom:"1rem"}}>
+          <div style={{...s.optBtn(voiceFeedback==="correct"?"correct":"wrong"),borderRadius:12,padding:"1rem",marginBottom:"0.75rem"}}>
+            <div style={{fontWeight:500,marginBottom:4}}>{voiceFeedback==="correct"?"✓ Sehr gut!":"✗ Noch nicht ganz."}</div>
+            <div style={{fontSize:13}}>Erkannt: „{voiceResult}"</div>
+          </div>
+          {aiFeedbackLoading && <div style={{fontSize:13,color:"#aaa"}}>KI-Tipp wird geladen...</div>}
+          {aiFeedback && <div style={{background:"#f0f4ff",borderRadius:8,padding:"0.75rem 1rem",fontSize:13,color:"#333",lineHeight:1.6}}>{aiFeedback}</div>}
+        </div>}
+        {(voiceState==="unsupported"||voiceState==="error") && <div style={{color:"#dc2626",fontSize:13,padding:"0.5rem"}}>Mikrofon nicht verfügbar.</div>}
+        <button onClick={startVoice} disabled={voiceState==="recording"||voiceState==="listening-prompt"} style={{width:"100%",padding:"13px",border:"1px solid #ddd",borderRadius:12,background:"#fff",fontSize:15,fontWeight:500,cursor:"pointer"}}>
+          {voiceState==="idle"?"Starten":voiceState==="done"?"Nächstes Wort":"..."}
+        </button>
+      </div>}
+
+      {tab==="vokabeln" && <div>
+        <div style={{fontSize:14,fontWeight:500,marginBottom:"0.5rem"}}>KI-Vokabel-Generator</div>
+        <div style={{fontSize:13,color:"#888",marginBottom:"1.25rem",lineHeight:1.6}}>Claude generiert 20 neue Vokabeln zu einem Thema. Claude API Key oben eintragen! Aktuell: {vocab.length} Wörter.</div>
+        <div style={{marginBottom:"1rem"}}>
+          <div style={{fontSize:13,color:"#888",marginBottom:8}}>Thema:</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {["Restaurant","Wohnung","Einkaufen","Behörden","Barcelona","Gesundheit","Familie","Arbeit","Freizeit","Reisen","Sport","Wetter"].map(c=>(
+              <button key={c} onClick={()=>setAiVocabCat(c)} style={s.pill(aiVocabCat===c)}>{c}</button>
+            ))}
+          </div>
+        </div>
+        <button onClick={loadMoreVocab} disabled={aiVocabLoading} style={{width:"100%",padding:"13px",border:"1px solid #ddd",borderRadius:12,background:"#fff",fontSize:15,fontWeight:500,cursor:"pointer",marginBottom:"0.75rem"}}>
+          {aiVocabLoading?"Generiere...":"20 neue Wörter laden"}
+        </button>
+        {aiVocabMsg && <div style={{fontSize:13,color:"#166534",padding:"0.5rem"}}>{aiVocabMsg}</div>}
+        <div style={{marginTop:"1.5rem"}}>
+          {CATS.filter(c=>c!=="Alle").map(c=>{
+            const n = vocab.filter(v=>v.cat===c).length;
+            return n>0 ? <div key={c} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #f0f0f0",fontSize:13}}>
+              <span>{c}</span><span style={{color:"#aaa"}}>{n} Wörter</span>
+            </div> : null;
+          })}
+        </div>
+      </div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
