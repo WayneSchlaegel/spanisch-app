@@ -102,7 +102,7 @@ const CATS = ["Alle","Begrüßung","Restaurant","Wohnung","Einkaufen","Behörden
 const shuffle = arr => [...arr].sort(() => Math.random()-0.5);
 
 const callClaude = async (prompt, apiKey) => {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://spanisch-proxy.mydemuth.workers.dev/", {
     method:"POST",
     headers:{"Content-Type":"application/json","x-api-key": apiKey, "anthropic-version":"2023-06-01"},
     body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
